@@ -2,57 +2,55 @@
 
 add_action( 'admin_init', 'vt_settings_api' );
 function vt_settings_api() {
-    register_setting( 'vetdrugs', 'vt_apikey', [
-        'type'        => 'string',
-        'description' => __( 'Zoom API Key', 'vetdrugs' )
-    ] );
+    register_setting( 'vetdrugs', 'vt_zoom_apikey' );
 
-    register_setting( 'vetdrugs', 'vt_clientsecret', [
-        'type'        => 'string',
-        'description' => __( 'Zoom API Secret', 'vetdrugs' )
-    ] );
+    register_setting( 'vetdrugs', 'vt_zoom_clientsecret' );
 
-    register_setting( 'vetdrugs', 'vt_jwtsecret', [
-        'type'        => 'string',
-        'description' => __( 'JWT secret used when communicating with the Zoom API', 'vetdrugs' )
-    ] );
+
+    register_setting( 'vetdrugs', 'vt_gapi_got_refresh_token' );
 
     add_settings_section(
-        'vetdrugs_settings',
+        'vetdrugs_zoom_settings',
         __( 'Zoom API Settings', 'vetdrugs' ),
-        'vt_settings_section_render',
+        'vt_zoom_settings_section_render',
+        'vetdrugs'
+    );
+
+    add_settings_section(
+        'vetdrugs_calendar_settings',
+        __( 'Google Calendar API Settings', 'vetdrugs' ),
+        'vt_calendar_settings_section_render',
         'vetdrugs'
     );
 
     add_settings_field(
-        'vt_apikey_field',
+        'vt_zoom_apikey_field',
         __( 'Zoom API Key', 'vetdrugs' ),
-        'vt_apikey_field_render',
+        'vt_zoom_apikey_field_render',
         'vetdrugs',
-        'vetdrugs_settings',
+        'vetdrugs_zoom_settings',
         [
-                'label_for' => 'vt_apikey_field'
+            'label_for' => 'vt_zoom_apikey_field'
         ]
     );
     add_settings_field(
-        'vt_clientsecret_field',
+        'vt_zoom_clientsecret_field',
         __( 'Zoom API Client Secret', 'vetdrugs' ),
-        'vt_clientsecret_field_render',
+        'vt_zoom_clientsecret_field_render',
         'vetdrugs',
-        'vetdrugs_settings',
+        'vetdrugs_zoom_settings',
         [
-                'label_for' => 'vt_clientsecret_field'
+            'label_for' => 'vt_zoom_clientsecret_field'
         ]
     );
+
     add_settings_field(
-        'vt_jwtsecret_field',
-        __( 'JWT Secret Key', 'vetdrugs' ),
-        'vt_jwtsecret_field_render',
+        'vt_gapi_got_refresh_token',
+        __( 'Google Calendar Authorization', 'vetdrugs' ),
+        'vt_calendar_credentials_field_render',
         'vetdrugs',
-        'vetdrugs_settings',
-        [
-                'label_for' => 'vt_jwtsecret_field'
-        ]
+        'vetdrugs_calendar_settings',
+        [ 'label_for' => 'vt_calendarapi_credentials_path' ]
     );
 }
 
@@ -73,43 +71,70 @@ function vt_settings_page_render() {
     if ( isset( $_GET['settings-updated'] ) ) {
         add_settings_error( 'vt_settings', 'vt_message', __( 'Settings Saved', 'vetdrugs' ), 'updated' );
     }
+    if ( isset( $_GET['code'] ) ) {
+        $code = $_GET['code'];
+        vetdrugs()
+            ->getCalendar()
+            ->saveAuthCode( $code );
+        update_option( 'vt_gapi_got_refresh_token', 1 );
+
+        add_settings_error( 'vt_settings', 'vt_oauth_success', __( 'Google Calendar account authorized successfully!', 'vetdrugs' ), 'updated' );
+    }
     settings_errors( 'vt_settings' );
     ?>
     <div class="wrap">
         <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-        <form method="post" action="options.php">
+        <form method="post" enctype="multipart/form-data" action="options.php">
             <?php settings_fields( 'vetdrugs' ); ?>
-            <?php do_settings_sections('vetdrugs'); ?>
+            <?php do_settings_sections( 'vetdrugs' ); ?>
             <?php submit_button(); ?>
         </form>
     </div>
     <?php
 }
 
-function vt_settings_section_render() {
+function vt_zoom_settings_section_render() {
     $intro = __( 'Here you can edit the Zoom API settings for checkout integration', 'vetdrugs' );
     echo "<p>$intro</p>";
 }
 
-function vt_apikey_field_render($args) {
-    $current = get_option( 'vt_apikey' );
-    ?>
-    <input type="password" name="vt_apikey" id="<?= $args['label_for'] ?>" value="<?= $current ? esc_attr( $current ) : '' ?>"/>
-    <?php
+function vt_calendar_settings_section_render() {
+    $intro = __( 'Here you can edit the Google Calendar API settings for checkout integration', 'vetdrugs' );
+    echo "<p>$intro</p>";
 }
 
-function vt_clientsecret_field_render($args) {
-    $current = get_option( 'vt_clientsecret' );
+function vt_zoom_apikey_field_render( $args ) {
+    $current = get_option( 'vt_zoom_apikey' );
     ?>
-    <input type="password" name="vt_clientsecret" id="<?= $args['label_for'] ?>"
+    <input type="password" name="vt_zoom_apikey" id="<?= $args['label_for'] ?>"
            value="<?= $current ? esc_attr( $current ) : '' ?>"/>
     <?php
 }
 
-function vt_jwtsecret_field_render($args) {
-    $current = get_option( 'vt_jwtsecret' );
+function vt_zoom_clientsecret_field_render( $args ) {
+    $current = get_option( 'vt_zoom_clientsecret' );
     ?>
-    <input type="password" name="vt_jwtsecret" id="<?= $args['label_for'] ?>" value="<?= $current ? esc_attr( $current ) : '' ?>"/>
+    <input type="password" name="vt_zoom_clientsecret" id="<?= $args['label_for'] ?>"
+           value="<?= $current ? esc_attr( $current ) : '' ?>"/>
     <?php
 }
 
+function vt_calendar_credentials_field_render( $args ) {
+    $current         = get_option( 'vt_gapi_got_refresh_token' );
+    $google_auth_url = vetdrugs()
+        ->getCalendar()
+        ->getAuthUrl();
+    $feedback        = $current
+        ? __( 'Auth completed!', 'vetdrugs' )
+        : __( 'Not authorized yet.', 'vetdrugs' );
+    ?>
+    <a class="button-primary" target="_blank"
+       href="<?php esc_attr_e( esc_url( $google_auth_url ), 'vetdrugs' ) ?>"><span
+                class="dashicons dashicons-google"
+                style="vertical-align: middle"></span>&nbsp;<?php esc_html_e( 'Authorize with Google', 'vetdrugs' ); ?>
+    </a>
+    <p><span class="dashicons <?= $current ? 'dashicons-yes-alt' : ' dashicons-dismiss' ?>"
+             style="color: <?= $current ? '#19d02e' : '#ea1906' ?>"></span>&nbsp;<?php echo esc_html( $feedback ); ?>
+    </p>
+    <?php
+}
