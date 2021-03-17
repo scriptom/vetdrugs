@@ -1,4 +1,5 @@
 vendor
 .idea
 credentials.json
+zoom-credentials.json
 .token/
