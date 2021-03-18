@@ -2,10 +2,6 @@
 
 add_action( 'admin_init', 'vt_settings_api' );
 function vt_settings_api() {
-    register_setting( 'vetdrugs', 'vt_zoom_apikey' );
-
-    register_setting( 'vetdrugs', 'vt_zoom_clientsecret' );
-
     register_setting( 'vetdrugs', 'vt_zoom_got_refresh_token' );
 
     register_setting( 'vetdrugs', 'vt_gapi_got_refresh_token' );
@@ -22,28 +18,6 @@ function vt_settings_api() {
         __( 'Google Calendar API Settings', 'vetdrugs' ),
         'vt_calendar_settings_section_render',
         'vetdrugs'
-    );
-
-    add_settings_field(
-        'vt_zoom_apikey_field',
-        __( 'Zoom API Key', 'vetdrugs' ),
-        'vt_zoom_apikey_field_render',
-        'vetdrugs',
-        'vetdrugs_zoom_settings',
-        [
-            'label_for' => 'vt_zoom_apikey_field'
-        ]
-    );
-
-    add_settings_field(
-        'vt_zoom_clientsecret_field',
-        __( 'Zoom API Client Secret', 'vetdrugs' ),
-        'vt_zoom_clientsecret_field_render',
-        'vetdrugs',
-        'vetdrugs_zoom_settings',
-        [
-            'label_for' => 'vt_zoom_clientsecret_field'
-        ]
     );
 
     add_settings_field(
@@ -90,7 +64,7 @@ function vt_settings_page_render() {
         $service = $_GET['service'];
         if ( $service === 'google' ) {
             $service = 'gapi';
-            $token = vetdrugs()
+            $token   = vetdrugs()
                 ->getCalendar()
                 ->saveAuthCode( $code );
             add_settings_error( 'vt_settings', 'vt_oauth_success', __( 'Google Calendar account authorized successfully!', 'vetdrugs' ), 'updated' );
@@ -101,7 +75,7 @@ function vt_settings_page_render() {
 
             add_settings_error( 'vt_settings', 'vt_oauth_success', __( 'Zoom account authorized successfully!', 'vetdrugs' ), 'updated' );
         }
-        if ($token && !array_key_exists('error', (array) $token)) {
+        if ( $token && !array_key_exists( 'error', (array) $token ) ) {
             update_option( "vt_{$service}_got_refresh_token", 1 );
         }
 
@@ -125,29 +99,13 @@ function vt_settings_page_render() {
 }
 
 function vt_zoom_settings_section_render() {
-    $intro = __( 'Here you can edit the Zoom API settings for checkout integration', 'vetdrugs' );
+    $intro = __( 'Please authenticate with Zoom to enable Meetings integration.', 'vetdrugs' );
     echo "<p>$intro</p>";
 }
 
 function vt_calendar_settings_section_render() {
-    $intro = __( 'Here you can edit the Google Calendar API settings for checkout integration', 'vetdrugs' );
+    $intro = __( 'Please authenticate with Google Calendar to enable Events integration.', 'vetdrugs' );
     echo "<p>$intro</p>";
-}
-
-function vt_zoom_apikey_field_render( $args ) {
-    $current = get_option( 'vt_zoom_apikey' );
-    ?>
-    <input type="password" name="vt_zoom_apikey" id="<?= $args['label_for'] ?>"
-           value="<?= $current ? esc_attr( $current ) : '' ?>"/>
-    <?php
-}
-
-function vt_zoom_clientsecret_field_render( $args ) {
-    $current = get_option( 'vt_zoom_clientsecret' );
-    ?>
-    <input type="password" name="vt_zoom_clientsecret" id="<?= $args['label_for'] ?>"
-           value="<?= $current ? esc_attr( $current ) : '' ?>"/>
-    <?php
 }
 
 function vt_zoom_authorization_render() {

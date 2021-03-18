@@ -20,22 +20,15 @@ final class VtCalendar {
     /**
      * @var string
      */
-    private $redirectUri;
-
-    /**
-     * @var string
-     */
     private $tokenPath;
 
     /**
      * VtCalendar constructor.
      * @param array|string $authConfig
-     * @param $redirectUri
      * @param $tokenPath
      */
-    public function __construct( $authConfig, $redirectUri, $tokenPath ) {
+    public function __construct( $authConfig, $tokenPath ) {
         $this->authConfig  = $authConfig;
-        $this->redirectUri = $redirectUri;
         $this->tokenPath   = $tokenPath;
     }
 
@@ -72,7 +65,6 @@ final class VtCalendar {
         $client = new Google_Client();
         $client->setScopes( Google_Service_Calendar::CALENDAR_EVENTS );
         $client->setAuthConfig( $this->authConfig );
-        $client->setRedirectUri( $this->redirectUri );
         $filename = $this->tokenPath . DIRECTORY_SEPARATOR . self::_TOKEN_FILENAME;
         if ( file_exists( $filename ) ) {
             $accessToken = json_decode( file_get_contents( $filename ), true );

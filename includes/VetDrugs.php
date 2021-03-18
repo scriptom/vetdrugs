@@ -29,12 +29,10 @@ class VetDrugs {
 
     public static function build() {
         if ( null === self::$instance ) {
-            $zoom_api_key              = get_option( 'vt_zoom_apikey' );
-            $zoom_client_secret        = get_option( 'vt_zoom_clientsecret' );
             $calendar_credentials_file = self::CALENDAR_CREDENTIALS_FILE;
             $zoom_credentials_file     = self::ZOOM_CREDENTIALS_FILE;
             $vtZoom                    = new VtZoom( $zoom_credentials_file, VETDRUGS_PLUGIN_DIR . '.token' );
-            $vtCalendar                = new VtCalendar( $calendar_credentials_file, admin_url( 'admin.php?page=vetdrugs&service=google' ), VETDRUGS_PLUGIN_DIR . '.token' );
+            $vtCalendar                = new VtCalendar( $calendar_credentials_file, VETDRUGS_PLUGIN_DIR . '.token' );
             self::$instance            = new self( $vtZoom, $vtCalendar );
         }
 
