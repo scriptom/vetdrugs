@@ -89,6 +89,9 @@ final class VtZoom {
 
     public function createMeeting( \DateTime $date, $name ) {
         try {
+            if ($this->isAccessTokenExpired()) {
+                $this->requestAccessTokenWithRefreshToken($this->getRefreshToken());
+            }
             $jwtToken = $this->getAccessToken();
             $response = $this->httpClient->post( "users/me/meetings", [
                 'json'    => [
